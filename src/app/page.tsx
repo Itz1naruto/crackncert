@@ -11,8 +11,9 @@ import { useEffect, useRef, useState } from 'react';
 
 export default function LandingPage() {
   const router = useRouter();
-  const { user, isGuest, continueAsGuest, signIn, signUp } = useAuth();
+  const { user, isGuest, continueAsGuest, signIn, signUp, signOut } = useAuth();
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isMounted, setIsMounted] = useState(false);
   const [showSignIn, setShowSignIn] = useState(false);
   const [showSignUp, setShowSignUp] = useState(false);
   const [signInEmail, setSignInEmail] = useState('');
@@ -21,8 +22,14 @@ export default function LandingPage() {
   const [signUpEmail, setSignUpEmail] = useState('');
   const [signUpPassword, setSignUpPassword] = useState('');
 
+  // Ensure we're on the client side before using scroll with ref
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Use window scroll (no target ref) to avoid hydration issues
+  // This is safer and doesn't require the ref to be hydrated
   const { scrollYProgress } = useScroll({
-    target: containerRef,
     offset: ['start start', 'end start']
   });
   
@@ -34,8 +41,12 @@ export default function LandingPage() {
   const cardOpacity = useTransform(scrollYProgress, [0, 0.3, 0.6], [0, 1, 1]);
   const cardScale = useTransform(scrollYProgress, [0, 0.3, 0.6], [0.9, 1, 1]);
 
-  // Don't auto-redirect - allow users to visit landing page even if authenticated
-  // Users can manually navigate to /inspired if they want to start testing
+  // Redirect authenticated users to test page
+  useEffect(() => {
+    if (user || isGuest) {
+      router.push('/inspired');
+    }
+  }, [user, isGuest, router]);
 
   function handleSignIn(e: React.FormEvent) {
     e.preventDefault();
@@ -47,6 +58,42 @@ export default function LandingPage() {
     e.preventDefault();
     if (!signUpName || !signUpEmail || !signUpPassword) return;
     signUp(signUpName, signUpEmail, signUpPassword);
+  }
+
+  // If user is already logged in, show a quick access view
+  if (user || isGuest) {
+    return (
+      <main className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center p-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-md mx-auto"
+          >
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+              Welcome back!
+            </h1>
+            <p className="text-gray-700 dark:text-gray-300 mb-6">
+              Redirecting you to the test page...
+            </p>
+            <AnimatedButton
+              onClick={() => router.push('/inspired')}
+              animation="bounce"
+              className="bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-6 py-3 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors mr-4"
+            >
+              Go to Tests
+            </AnimatedButton>
+            <AnimatedButton
+              onClick={signOut}
+              animation="blurSlideOut"
+              className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors"
+            >
+              Sign Out
+            </AnimatedButton>
+          </motion.div>
+        </div>
+      </main>
+    );
   }
 
   return (
@@ -83,50 +130,38 @@ export default function LandingPage() {
               className="flex items-center gap-4"
             >
               <ThemeToggle />
-              {user || isGuest ? (
-                <AnimatedButton
-                  onClick={() => router.push('/inspired')}
-                  animation="bounce"
-                  className="px-4 py-2 text-sm font-semibold bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
-                >
-                  Start Testing
-                </AnimatedButton>
-              ) : (
-                <>
-                  <AnimatedButton
-                    onClick={() => {
-                      setShowSignIn(true);
-                      setShowSignUp(false);
-                      const card = document.getElementById('auth-card');
-                      if (card) {
-                        setTimeout(() => {
-                          card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        }, 100);
-                      }
-                    }}
-                    animation="blurSlideIn"
-                    className="px-4 py-2 text-sm font-semibold text-gray-700 dark:text-gray-300 border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                  >
-                    Sign In
-                  </AnimatedButton>
-                  <AnimatedButton
-                    onClick={() => {
-                      setShowSignUp(true);
-                      setShowSignIn(false);
-                      const card = document.getElementById('auth-card');
-                      if (card) {
-                        setTimeout(() => {
-                          card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        }, 100);
-                      }
-                    }}
-                    animation="bounce"
-                    className="px-4 py-2 text-sm font-semibold bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
-                  >
-                    Sign Up
-                  </AnimatedButton>
-                </>
-              )}
+              <AnimatedButton
+                onClick={() => {
+                  setShowSignIn(true);
+                  setShowSignUp(false);
+                  const card = document.getElementById('auth-card');
+                  if (card) {
+                    setTimeout(() => {
+                      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 100);
+                  }
+                }}
+                animation="blurSlideIn"
+                className="px-4 py-2 text-sm font-semibold text-gray-700 dark:text-gray-300 border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              >
+                Sign In
+              </AnimatedButton>
+              <AnimatedButton
+                onClick={() => {
+                  setShowSignUp(true);
+                  setShowSignIn(false);
+                  const card = document.getElementById('auth-card');
+                  if (card) {
+                    setTimeout(() => {
+                      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 100);
+                  }
+                }}
+                animation="bounce"
+                className="px-4 py-2 text-sm font-semibold bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
+              >
+                Sign Up
+              </AnimatedButton>
             </motion.div>
           </div>
         </div>
@@ -134,7 +169,7 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <motion.section
-        style={{ y: heroY, opacity: heroOpacity, scale: heroScale }}
+        style={isMounted ? { y: heroY, opacity: heroOpacity, scale: heroScale } : undefined}
         className="text-center px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24"
       >
         <motion.div
@@ -175,7 +210,7 @@ export default function LandingPage() {
       <div className="flex justify-center px-4 sm:px-6 lg:px-8 pb-16 sm:pb-20">
         <motion.div
           id="auth-card"
-          style={{ y: cardY, opacity: cardOpacity, scale: cardScale }}
+          style={isMounted ? { y: cardY, opacity: cardOpacity, scale: cardScale } : undefined}
           initial={{ opacity: 0, scale: 0.9, y: 50 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.7, type: 'spring' }}

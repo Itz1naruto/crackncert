@@ -20,10 +20,62 @@ export default function DashboardPage() {
   const [showConfetti,setShowConfetti]=useState(false);
   const router = useRouter();
 
-  useEffect(() => {
+  const loadTests = () => {
     const vals = JSON.parse(localStorage.getItem("ncert-tests") || "[]");
-    setTests(vals.reverse());
-    setShowConfetti(vals.some((t:any) => t.score===100));
+    // Remove duplicates: keep the most recent entry for each class/subject/chapter combination
+    const uniqueTests = new Map();
+    vals.forEach((test: any) => {
+      const key = `${test.classNum}-${test.subject}-${test.chapter}`;
+      const existing = uniqueTests.get(key);
+      // Keep the most recent one (higher date or later in array)
+      if (!existing || (test.date && existing.date && test.date > existing.date) || (!existing.date && !test.date)) {
+        uniqueTests.set(key, test);
+      }
+    });
+    const uniqueArray = Array.from(uniqueTests.values()).reverse();
+    setTests(uniqueArray);
+    setShowConfetti(uniqueArray.some((t:any) => t.score===100));
+  };
+
+  useEffect(() => {
+    loadTests();
+    
+    // Listen for storage changes (when new tests are added from other tabs/windows)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'ncert-tests') {
+        loadTests();
+      }
+    };
+    
+    // Listen for custom storage events (for same-tab updates)
+    const handleCustomStorage = () => {
+      loadTests();
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('testSubmitted', handleCustomStorage);
+    
+    // Also reload when the page becomes visible (in case user navigated back)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        loadTests();
+      }
+    };
+    
+    // Reload when window gains focus (user switches back to tab)
+    const handleFocus = () => {
+      loadTests();
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('testSubmitted', handleCustomStorage);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
 
   useEffect(() => {
@@ -148,7 +200,7 @@ export default function DashboardPage() {
                     </motion.tr>
                   ) : tests.map((test, i) => (
                     <motion.tr 
-                      key={i}
+                      key={`${test.classNum}-${test.subject}-${test.chapter}-${test.date || i}`}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.1 + i * 0.05 }}

@@ -147,12 +147,19 @@ function generateFeaturedTests(
 
 export default function InspiredLanding() {
   const router = useRouter();
-  const { user, isGuest } = useAuth();
+  const { user, isGuest, signOut } = useAuth();
   const [selectedClass, setSelectedClass] = useState<number | null>(null);
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
   const [selectedChapter, setSelectedChapter] = useState<string | null>(null);
   const [selectedStream, setSelectedStream] = useState<typeof STREAMS[number] | null>(null);
   const [showFilters, setShowFilters] = useState(true);
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!user && !isGuest) {
+      router.push("/");
+    }
+  }, [user, isGuest, router]);
 
   const availableChapters = useMemo(() => {
     if (!selectedClass || !selectedSubject) return [];
@@ -181,6 +188,10 @@ export default function InspiredLanding() {
     }
   }
 
+  if (!user && !isGuest) {
+    return null;
+  }
+
   return (
     <main className="min-h-screen bg-white dark:bg-gray-900">
       {/* Header */}
@@ -203,6 +214,13 @@ export default function InspiredLanding() {
               >
                 Dashboard
                 <ArrowRightIcon className="w-4 h-4" />
+              </AnimatedButton>
+              <AnimatedButton
+                onClick={signOut}
+                animation="blurSlideOut"
+                className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
+              >
+                Sign Out
               </AnimatedButton>
             </div>
           </div>

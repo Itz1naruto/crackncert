@@ -127,18 +127,24 @@ export default function TestPage() {
   function handleSubmit(e: any) {
     e.preventDefault();
     let correct = 0; 
-    questions.forEach((q, i) => { 
-      const ans = answers[i];
-      if (ans !== "" && !isNaN(parseInt(ans)) && parseInt(ans) === q.correct) {
-        correct++; 
-      }
-    });
-    const percent = Math.round((correct / questions.length) * 100); 
+    if (questions) {
+      questions.forEach((q, i) => { 
+        const ans = answers[i];
+        if (ans !== "" && !isNaN(parseInt(ans)) && parseInt(ans) === q.correct) {
+          correct++; 
+        }
+      });
+    }
+    const percent = Math.round((correct / (questions?.length || 1)) * 100); 
     setScore(percent); 
     setSubmitted(true);
     const tests = JSON.parse(localStorage.getItem("ncert-tests") || "[]");
     tests.push({ classNum, subject, chapter: selectedChapter, score: percent, date: Date.now(), user: (typeof window!=='undefined' && localStorage.getItem('ncert-user'))?JSON.parse(localStorage.getItem('ncert-user') as string).name: "Guest" });
     localStorage.setItem("ncert-tests", JSON.stringify(tests));
+    // Dispatch custom event to notify dashboard of new test
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('testSubmitted'));
+    }
   }
 
   return (
@@ -301,23 +307,34 @@ export default function TestPage() {
               }`}>
                 Your Score: <span className="ml-2">{score}%</span>
               </div>
-              <motion.button
-                onClick={async () => {
-                  setSubmitted(false);
-                  setScore(null);
-                  setAnswers([]);
-                  setShowConfetti(false);
-                  setQuestions(null);
-                  setError(null);
-                  await generateQuestions(true);
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                whileHover={{scale:1.02}}
-                whileTap={{scale:.98}}
-                className="bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-base sm:text-lg px-8 py-3 rounded-lg font-semibold hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors shadow-md w-full sm:w-auto"
-              >
-                🔄 Re-attempt Test (New Questions)
-              </motion.button>
+              <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                <motion.button
+                  onClick={async () => {
+                    setSubmitted(false);
+                    setScore(null);
+                    setAnswers([]);
+                    setShowConfetti(false);
+                    setQuestions(null);
+                    setError(null);
+                    await generateQuestions(true);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  whileHover={{scale:1.02}}
+                  whileTap={{scale:.98}}
+                  className="bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-base sm:text-lg px-8 py-3 rounded-lg font-semibold hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors shadow-md w-full sm:w-auto"
+                >
+                  🔄 Re-attempt Test (New Questions)
+                </motion.button>
+                <motion.button
+                  onClick={() => router.push('/inspired')}
+                  whileHover={{scale:1.02}}
+                  whileTap={{scale:.98}}
+                  className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-2 border-gray-300 dark:border-gray-600 text-base sm:text-lg px-8 py-3 rounded-lg font-semibold hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors shadow-md w-full sm:w-auto flex items-center justify-center gap-2"
+                >
+                  <ArrowLeftIcon className="w-5 h-5" />
+                  Back to Test Page
+                </motion.button>
+              </div>
             </motion.div>
           )}
         </motion.form>

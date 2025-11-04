@@ -1,5 +1,55 @@
 import { NextRequest, NextResponse } from "next/server";
 
+async function getAvailableModels(key: string): Promise<string[]> {
+  try {
+    // Try v1beta first (more models available)
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
+    if (response.ok) {
+      const data = await response.json();
+      const models = data.models?.map((m: any) => {
+        const name = m.name?.replace('models/', '');
+        // Check if model supports generateContent
+        const supportedMethods = m.supportedGenerationMethods || [];
+        if (name && name.includes('gemini') && (supportedMethods.includes('generateContent') || supportedMethods.length === 0)) {
+          return name;
+        }
+        return null;
+      }).filter(Boolean) || [];
+      if (models.length > 0) {
+        console.log(`[MCQ] Found ${models.length} available models:`, models.slice(0, 5));
+        return models;
+      }
+    }
+  } catch (e) {
+    console.log("[MCQ] Could not list models from v1beta:", e);
+  }
+  
+  // Fallback to v1
+  try {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1/models?key=${key}`);
+    if (response.ok) {
+      const data = await response.json();
+      const models = data.models?.map((m: any) => {
+        const name = m.name?.replace('models/', '');
+        const supportedMethods = m.supportedGenerationMethods || [];
+        if (name && name.includes('gemini') && (supportedMethods.includes('generateContent') || supportedMethods.length === 0)) {
+          return name;
+        }
+        return null;
+      }).filter(Boolean) || [];
+      if (models.length > 0) {
+        console.log(`[MCQ] Found ${models.length} available models from v1:`, models.slice(0, 5));
+        return models;
+      }
+    }
+  } catch (e) {
+    console.log("[MCQ] Could not list models from v1:", e);
+  }
+  
+  // Default fallback models (if listing fails)
+  return ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"];
+}
+
 function buildPrompt(classNumber: string, subject: string, chapter: string, variation: string, difficulty: string = 'Medium', stream?: string, strict = false) {
   const difficultyGuidelines = {
     'Easy': 'Use simple, straightforward questions. Basic definitions, recall facts, single-step problems. Suitable for beginners. Keep language simple.',
@@ -44,126 +94,113 @@ function countChapterMatches(items: any[], chapter: string) {
   return score;
 }
 
-async function listAvailableModels(key: string): Promise<string[]> {
-  try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1/models?key=${key}`);
-    if (response.ok) {
-      const data = await response.json();
-      const models = data.models?.map((m: any) => m.name?.replace('models/', '')) || [];
-      console.log("[Gemini] Available models:", models);
-      return models.filter((m: string) => m && m.includes('gemini'));
-    }
-  } catch (e) {
-    console.log("[Gemini] Could not list models:", e);
-  }
-  return [];
-}
-
 async function tryGemini(prompt: string) {
   const key = process.env.GEMINI_API_KEY;
   if (!key) return null;
   
-  // First, try to list available models
-  const availableModels = await listAvailableModels(key);
+  // Get available models first (fast - single API call)
+  const availableModels = await getAvailableModels(key);
   
-  // List of model names to try (most common first)
-  const modelNames = availableModels.length > 0 
-    ? availableModels 
-    : [
-        "gemini-1.5-flash-latest",
-        "gemini-1.5-pro-latest", 
-        "gemini-1.5-flash",
-        "gemini-1.5-pro",
-        "gemini-pro"
-      ];
+  // Prioritize Flash models for speed, then Pro
+  const modelNames = availableModels.sort((a, b) => {
+    if (a.includes('flash') && !b.includes('flash')) return -1;
+    if (!a.includes('flash') && b.includes('flash')) return 1;
+    return 0;
+  });
   
-  // Try REST API with different models
+  // Try REST API v1beta first (where most models are available)
   for (const modelName of modelNames) {
     try {
-      console.log(`[Gemini] Trying REST API with model: ${modelName}`);
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/${modelName}:generateContent?key=${key}`, {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${key}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 3000,  // Enough for 10 MCQs
+          },
         }),
       });
       
       if (!response.ok) {
-        const errText = await response.text();
-        console.log(`[Gemini REST] Model ${modelName} failed: ${response.status}`);
-        if (modelName === modelNames[modelNames.length - 1]) {
-          console.error("[Gemini REST] All models failed. Error:", errText);
-        }
+        const errorText = await response.text().catch(() => "");
+        console.log(`[MCQ] Model ${modelName} failed: ${response.status} - ${errorText.substring(0, 150)}`);
         continue; // Try next model
       }
       
       const data = await response.json();
       const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
       if (!text) {
-        console.log(`[Gemini REST] Model ${modelName} returned no text`);
+        console.log(`[MCQ] Model ${modelName} returned empty text`);
         continue;
       }
       
-      console.log(`[Gemini REST] Success with ${modelName}! Response length:`, text.length);
+      console.log(`[MCQ] ✅ Success with ${modelName}!`);
       const cleaned = text.replace(/```json|```/g, "").trim();
       let parsed;
       try {
         parsed = JSON.parse(cleaned);
       } catch (parseErr) {
-        console.error("[Gemini REST] JSON parse error:", parseErr);
-        console.error("[Gemini REST] First 200 chars:", text.substring(0, 200));
+        console.log(`[MCQ] Model ${modelName} returned invalid JSON`);
         continue;
       }
       
       if (Array.isArray(parsed) && parsed[0]?.q) {
-        console.log("[Gemini REST] Success! Got", parsed.length, "questions");
         return parsed;
       }
       if (parsed?.mcqs && Array.isArray(parsed.mcqs)) {
-        console.log("[Gemini REST] Success! Got", parsed.mcqs.length, "questions");
         return parsed.mcqs;
       }
-      console.error("[Gemini REST] Invalid structure");
-      continue;
     } catch (restErr: any) {
-      console.log(`[Gemini REST] Model ${modelName} exception:`, restErr.message);
-      if (modelName === modelNames[modelNames.length - 1]) {
-        console.error("[Gemini] All REST API attempts failed");
-      }
+      console.log(`[MCQ] Model ${modelName} exception:`, restErr.message?.substring(0, 100));
       continue;
     }
   }
   
-  // If all REST attempts failed, try SDK with different models
+  // Fallback: Try SDK if REST fails
   try {
-    console.log("[Gemini] Trying SDK...");
     const { GoogleGenerativeAI } = await import("@google/generative-ai");
     const genai = new GoogleGenerativeAI(key);
     
-    for (const modelName of modelNames) {
+    for (const modelName of modelNames.slice(0, 3)) { // Try first 3 models
       try {
-        console.log(`[Gemini SDK] Trying model: ${modelName}`);
-        const model = genai.getGenerativeModel({ model: modelName });
+        const model = genai.getGenerativeModel({ 
+          model: modelName,
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 3000,
+          }
+        });
+        
         const result = await model.generateContent(prompt);
         const text = result.response.text();
+        
+        if (!text) continue;
+        
         const cleaned = text.replace(/```json|```/g, "").trim();
-        const parsed = JSON.parse(cleaned);
+        let parsed;
+        try {
+          parsed = JSON.parse(cleaned);
+        } catch (parseErr) {
+          continue;
+        }
+        
         if (Array.isArray(parsed) && parsed[0]?.q) {
-          console.log(`[Gemini SDK] Success with ${modelName}!`);
+          console.log(`[MCQ SDK] ✅ Success with ${modelName}!`);
           return parsed;
         }
         if (parsed?.mcqs && Array.isArray(parsed.mcqs)) {
-          console.log(`[Gemini SDK] Success with ${modelName}!`);
+          console.log(`[MCQ SDK] ✅ Success with ${modelName}!`);
           return parsed.mcqs;
         }
       } catch (e: any) {
-        console.log(`[Gemini SDK] Model ${modelName} failed:`, e.message);
-        if (modelName !== modelNames[modelNames.length - 1]) continue;
+        console.log(`[MCQ SDK] Model ${modelName} failed:`, e.message?.substring(0, 100));
+        continue;
       }
     }
-  } catch (e: any) {
-    console.error("[Gemini SDK] All attempts failed:", e.message);
+  } catch (sdkError: any) {
+    console.error("[MCQ SDK] SDK import failed:", sdkError.message?.substring(0, 100));
   }
   
   return null;
@@ -183,15 +220,13 @@ export async function POST(req: NextRequest) {
   const varId = String(variation || Date.now());
 
   let prompt = buildPrompt(String(classNumber), String(subject), String(chapter), varId, difficulty, stream);
-  console.log(`[MCQ API] Generating for Class ${classNumber}, ${subject}, Chapter: ${chapter}, Difficulty: ${difficulty}`);
-  console.log(`[MCQ API] Prompt length: ${prompt.length} chars`);
   
   let mcqs = await tryGemini(prompt);
 
-  if (!mcqs || countChapterMatches(mcqs, String(chapter)) < 6) {
+  // Only retry if completely failed, skip quality check to save time
+  if (!mcqs) {
     const strictPrompt = buildPrompt(String(classNumber), String(subject), String(chapter), varId, difficulty, stream, true);
-    const retry = await tryGemini(strictPrompt);
-    if (retry) mcqs = retry;
+    mcqs = await tryGemini(strictPrompt);
   }
 
   if (!mcqs) {
