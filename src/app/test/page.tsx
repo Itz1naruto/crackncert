@@ -1,7 +1,7 @@
 "use client";
 import { useAuth } from "@/components/AuthContext";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, Suspense } from "react";
 import { motion } from "framer-motion";
 import { BookOpenIcon, ArrowLeftIcon } from "@heroicons/react/24/outline";
 
@@ -12,7 +12,7 @@ function Confetti({ show }: { show: boolean }) {
   return <div className="pointer-events-none fixed inset-0 z-50 flex flex-col items-center animate-fadein">{[...Array(36)].map((_,i)=>(<motion.div key={i} className="absolute rounded-full" style={{background:i%3?"#8b5cf6":"#22d3ee",width:12+i%2*9,height:12+i%5*7,top:Math.random()*95+2+'%',left:Math.random()*97+1+'%',opacity:.75}} initial={{y:-80,scale:0.6+Math.random()*0.6}} animate={{y:[-80,360+Math.random()*120],opacity:[.9,0],x:[0,(Math.random()-.5)*90],rotate:0.4+Math.random()*260}} transition={{duration:1.55+Math.random(),delay:Math.random()/2}} />))}</div>;
 }
 
-export default function TestPage() {
+function TestPageContent() {
   const { user, isGuest } = useAuth();
   const router = useRouter();
   const params = useSearchParams();
@@ -340,5 +340,17 @@ export default function TestPage() {
         </motion.form>
       </div>
     </main>
+  );
+}
+
+export default function TestPage() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-lg text-gray-900 dark:text-white">Loading...</div>
+      </main>
+    }>
+      <TestPageContent />
+    </Suspense>
   );
 }

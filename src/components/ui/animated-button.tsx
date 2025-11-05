@@ -68,8 +68,8 @@ export function AnimatedButton({
       type={type}
       onClick={onClick}
       disabled={disabled}
-      initial={variants.initial}
-      animate={variants.animate}
+      {...('initial' in variants && { initial: variants.initial })}
+      {...('animate' in variants && { animate: variants.animate })}
       whileHover={variants.whileHover}
       whileTap={variants.whileTap}
       transition={variants.transition}

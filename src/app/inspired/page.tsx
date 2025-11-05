@@ -76,14 +76,27 @@ function getDeterministicAttempts(classNum: number, subject: string, chapter: st
   return 50 + (Math.abs(hash) % 200);
 }
 
+// Type for test objects
+type TestItem = {
+  title: string;
+  difficulty: typeof DIFFICULTIES[number];
+  subject: string;
+  classNum: number;
+  questions: number;
+  duration: number;
+  attempts: number;
+  chapter: string;
+  stream: typeof STREAMS[number] | null;
+};
+
 // Generate featured tests based on selections
 function generateFeaturedTests(
   selectedClass: number | null,
   selectedSubject: string | null,
   selectedChapter: string | null,
   selectedStream: typeof STREAMS[number] | null
-) {
-  const tests = [];
+): TestItem[] {
+  const tests: TestItem[] = [];
   
   if (selectedClass && selectedSubject) {
     let chapters: string[] = [];
@@ -137,7 +150,7 @@ function generateFeaturedTests(
         duration: test.difficulty === 'Easy' ? 15 : test.difficulty === 'Medium' ? 18 : 20,
         attempts: getDeterministicAttempts(test.class, test.subject, test.chapter, test.difficulty),
         chapter: test.chapter,
-        stream: 'stream' in test ? test.stream : null,
+        stream: ('stream' in test && test.stream) ? test.stream : null,
       });
     });
   }
@@ -385,7 +398,7 @@ export default function InspiredLanding() {
                     whileFocus={{ scale: 1.02 }}
                     value={selectedChapter || ''}
                     onChange={(e) => setSelectedChapter(e.target.value || null)}
-                    disabled={!selectedClass || !selectedSubject || availableChapters.length === 0 || (isScienceClass11Plus && !selectedStream)}
+                    disabled={!!(!selectedClass || !selectedSubject || availableChapters.length === 0 || (isScienceClass11Plus && selectedStream === null))}
                     className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-400 focus:border-transparent disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:text-gray-500 dark:disabled:text-gray-400 disabled:cursor-not-allowed transition-all"
                   >
                     <option value="">Select Chapter</option>
