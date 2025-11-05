@@ -1,5 +1,55 @@
 import { NextRequest, NextResponse } from "next/server";
 
+async function getAvailableModels(key: string): Promise<string[]> {
+  try {
+    // Try v1beta first (more models available)
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
+    if (response.ok) {
+      const data = await response.json();
+      const models = data.models?.map((m: any) => {
+        const name = m.name?.replace('models/', '');
+        // Check if model supports generateContent
+        const supportedMethods = m.supportedGenerationMethods || [];
+        if (name && name.includes('gemini') && (supportedMethods.includes('generateContent') || supportedMethods.length === 0)) {
+          return name;
+        }
+        return null;
+      }).filter(Boolean) || [];
+      if (models.length > 0) {
+        console.log(`[Chat] Found ${models.length} available models:`, models.slice(0, 5));
+        return models;
+      }
+    }
+  } catch (e) {
+    console.log("[Chat] Could not list models from v1beta:", e);
+  }
+  
+  // Fallback to v1
+  try {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1/models?key=${key}`);
+    if (response.ok) {
+      const data = await response.json();
+      const models = data.models?.map((m: any) => {
+        const name = m.name?.replace('models/', '');
+        const supportedMethods = m.supportedGenerationMethods || [];
+        if (name && name.includes('gemini') && (supportedMethods.includes('generateContent') || supportedMethods.length === 0)) {
+          return name;
+        }
+        return null;
+      }).filter(Boolean) || [];
+      if (models.length > 0) {
+        console.log(`[Chat] Found ${models.length} available models from v1:`, models.slice(0, 5));
+        return models;
+      }
+    }
+  } catch (e) {
+    console.log("[Chat] Could not list models from v1:", e);
+  }
+  
+  // Default fallback models (if listing fails)
+  return ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"];
+}
+
 async function tryGemini(message: string, conversationHistory: any[]) {
   const key = process.env.GEMINI_API_KEY;
   if (!key) {
@@ -42,18 +92,22 @@ Answer style: Mix humor with education, use simple language, give practical exam
 
 Answer directly as NCERT Cool Tutor:`;
 
-  // Prioritize fastest models first - skip model listing to save time
-  const modelNames = [
-    "gemini-1.5-flash-latest",  // Fastest - try first
-    "gemini-1.5-flash",         // Fallback
-    "gemini-1.5-pro-latest"     // Last resort
-  ];
+  // Get available models first (same approach as MCQ route)
+  const availableModels = await getAvailableModels(key);
+  
+  // Prioritize Flash models for speed, then Pro
+  const modelNames = availableModels.sort((a, b) => {
+    if (a.includes('flash') && !b.includes('flash')) return -1;
+    if (!a.includes('flash') && b.includes('flash')) return 1;
+    return 0;
+  });
 
-  // Try REST API - only try v1 (skip v1beta and SDK to save time)
+  // Try REST API v1beta first (where most models are available)
   for (const modelName of modelNames) {
     try {
+      console.log(`[Chat] 🔄 Trying model: ${modelName} (v1beta)`);
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1/models/${modelName}:generateContent?key=${key}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${key}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -70,6 +124,9 @@ Answer directly as NCERT Cool Tutor:`;
       );
 
       if (!response.ok) {
+        const errorText = await response.text().catch(() => "Could not read error");
+        console.error(`[Chat] ❌ Model ${modelName} failed: Status ${response.status}`);
+        console.error(`[Chat] Error details: ${errorText.substring(0, 300)}`);
         continue; // Try next model
       }
 
@@ -79,8 +136,11 @@ Answer directly as NCERT Cool Tutor:`;
       if (text && text.trim().length > 10) {
         console.log(`[Chat] ✅ Success with ${modelName}!`);
         return text.trim();
+      } else {
+        console.warn(`[Chat] ⚠️ Model ${modelName} returned empty or too short text`);
       }
     } catch (modelError: any) {
+      console.error(`[Chat] ❌ Exception with model ${modelName}:`, modelError.message);
       continue;
     }
   }

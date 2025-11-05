@@ -11,9 +11,9 @@ NCERT SmartTest is an online platform for chapter-wise MCQ practice/tests for Cl
 - Ready for Vercel deployment
 
 ## 🖥️ Technology
-- Framework: Next.js 14 (App Router, TypeScript)
-- Styling: Tailwind CSS, shadcn/ui
-- Backend: Next.js API routes, OpenAI
+- Framework: Next.js 16 (App Router, TypeScript)
+- Styling: Tailwind CSS v4, shadcn/ui
+- Backend: Next.js API routes, Google Gemini API
 
 ## 🔧 Getting Started
 
@@ -21,11 +21,12 @@ NCERT SmartTest is an online platform for chapter-wise MCQ practice/tests for Cl
    ```bash
    npm install
    ```
-2. **Configure OpenAI:**
-   - Copy `.env.local.example` to `.env.local` (or create manually)
-   - Add your `OPENAI_API_KEY`:
+2. **Configure Gemini API:**
+   - Create a `.env.local` file in the root directory
+   - Get your API key from [Google AI Studio](https://aistudio.google.com/apikey)
+   - Add your `GEMINI_API_KEY` to `.env.local`:
      ```env
-     OPENAI_API_KEY=sk-xxxxxx
+     GEMINI_API_KEY=your-api-key-here
      ```
 3. **Run the dev server:**
 ```bash
@@ -34,7 +35,7 @@ npm run dev
    Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 4. **Deploy:**
-   - Deploy on [Vercel](https://vercel.com/) and add your `OPENAI_API_KEY` in Environment Variables.
+   - Deploy on [Vercel](https://vercel.com/) and add your `GEMINI_API_KEY` in Environment Variables.
 
 ## 📚 Pages
 - `/` Homepage: Sign in/up, guest access, quick start panel
