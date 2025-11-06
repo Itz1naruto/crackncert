@@ -1,0 +1,21 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow reads and writes to verificationCodes collection
+    // This is for development - in production, add proper authentication checks
+    match /verificationCodes/{email} {
+      allow read, write: if true; // Allow all for development
+    }
+    
+    // Allow reads and writes to passwordResetTokens collection
+    match /passwordResetTokens/{token} {
+      allow read, write: if true; // Allow all for development
+    }
+    
+    // Default: deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+
