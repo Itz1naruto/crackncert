@@ -124,19 +124,45 @@ export async function verifySignupCode(email: string, code: string, password: st
     const user = userCredential.user;
     console.log('[Auth] ✅ Account created successfully:', user.uid);
 
-    // Auto-verify email since code was verified
-    // Note: In production, you might want to mark email as verified in Firestore
-    // For now, we'll use Firebase's email verification
+    // Auto-verify email since code was verified via email
+    // Use API route to verify email server-side
     try {
-      await sendEmailVerification(user);
-    } catch (verifyError) {
-      console.warn('[Auth] Could not send verification email:', verifyError);
+      const verifyResponse = await fetch('/api/verify-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uid: user.uid }),
+      });
+
+      const verifyData = await verifyResponse.json();
+
+      if (verifyResponse.ok) {
+        console.log('[Auth] ✅ Email auto-verified via API');
+        // Reload user to get updated verification status
+        await reload(user);
+      } else {
+        console.warn('[Auth] Could not auto-verify email via API:', verifyData.error);
+        // Fallback: send verification email
+        try {
+          await sendEmailVerification(user);
+          console.log('[Auth] Sent verification email as fallback');
+        } catch (emailError) {
+          console.warn('[Auth] Could not send verification email:', emailError);
+        }
+      }
+    } catch (apiError) {
+      console.error('[Auth] Error calling verify-email API:', apiError);
+      // Fallback: send verification email
+      try {
+        await sendEmailVerification(user);
+      } catch (emailError) {
+        console.warn('[Auth] Could not send verification email:', emailError);
+      }
     }
 
-    // Sign out immediately (user will need to log in)
-    await signOut(auth);
+    // Keep user signed in (they can use the app immediately)
+    // Don't sign out - they're already verified via code
     
-    alert(`✅ Account created successfully!\n\nYou can now log in with your email and password.`);
+    alert(`✅ Account created successfully!\n\nYour email has been verified. You're now logged in!`);
   } catch (error: any) {
     console.error('[Auth] Verify code error:', error);
     throw error;

@@ -124,11 +124,11 @@ export default function TestAuthPage() {
     setLoading(true);
     try {
       await verifySignupCode(email.trim(), trimmedCode, trimmedPassword);
-      alert('✅ Account created successfully! You can now log in.');
-      setView('login');
-      setEmail('');
-      setPassword('');
-      setCode('');
+      // User is already logged in after signup (verifySignupCode keeps them signed in)
+      // Redirect to main page
+      setTimeout(() => {
+        window.location.href = '/inspired';
+      }, 1000);
     } catch (error: any) {
       alert(`❌ ${error.message || 'Failed to verify code'}`);
     } finally {
@@ -225,6 +225,11 @@ export default function TestAuthPage() {
       await login(trimmedEmail, trimmedPassword);
       setEmail('');
       setPassword('');
+      // Redirect to main page after successful login
+      // AuthContext will update automatically via onAuthStateChanged
+      setTimeout(() => {
+        window.location.href = '/inspired';
+      }, 500);
     } catch (error: any) {
       if (error.message !== 'EMAIL_NOT_VERIFIED') {
         // Error already handled in login function
