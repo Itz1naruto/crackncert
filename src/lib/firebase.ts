@@ -12,7 +12,7 @@ const firebaseConfig = {
 };
 
 // Validate Firebase configuration
-const missingConfig = [];
+const missingConfig: string[] = [];
 if (!firebaseConfig.apiKey) missingConfig.push('NEXT_PUBLIC_FIREBASE_API_KEY');
 if (!firebaseConfig.authDomain) missingConfig.push('NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN');
 if (!firebaseConfig.projectId) missingConfig.push('NEXT_PUBLIC_FIREBASE_PROJECT_ID');
