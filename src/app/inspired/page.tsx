@@ -96,7 +96,7 @@ function generateFeaturedTests(
   selectedChapter: string | null,
   selectedStream: typeof STREAMS[number] | null
 ): TestItem[] {
-  const tests: TestItem[] = [];
+  const tests: any[] = [];
   
   if (selectedClass && selectedSubject) {
     let chapters: string[] = [];
@@ -166,13 +166,24 @@ export default function InspiredLanding() {
   const [selectedChapter, setSelectedChapter] = useState<string | null>(null);
   const [selectedStream, setSelectedStream] = useState<typeof STREAMS[number] | null>(null);
   const [showFilters, setShowFilters] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
 
-  // Redirect to login if not authenticated
+  // Ensure we're on client side before checking auth
   useEffect(() => {
-    if (!user && !isGuest) {
-      router.push("/");
+    setIsMounted(true);
+  }, []);
+
+  // Redirect to login if not authenticated (only after mount)
+  useEffect(() => {
+    if (isMounted && !user && !isGuest) {
+      // Double-check localStorage in case context hasn't updated yet
+      const savedUser = localStorage.getItem("ncert-user");
+      const guest = localStorage.getItem("ncert-guest");
+      if (!savedUser && !guest) {
+        router.push("/");
+      }
     }
-  }, [user, isGuest, router]);
+  }, [user, isGuest, router, isMounted]);
 
   const availableChapters = useMemo(() => {
     if (!selectedClass || !selectedSubject) return [];
@@ -201,6 +212,19 @@ export default function InspiredLanding() {
     }
   }
 
+  // Show loading state while mounting/checking auth
+  if (!isMounted) {
+    return (
+      <main className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-white mx-auto mb-4"></div>
+          <p className="text-lg text-gray-900 dark:text-white">Loading...</p>
+        </div>
+      </main>
+    );
+  }
+
+  // If not authenticated after mount, show nothing (will redirect)
   if (!user && !isGuest) {
     return null;
   }

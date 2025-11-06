@@ -1,15 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  async redirects() {
-    return [
-      {
-        source: '/',
-        destination: '/inspired',
-        permanent: false,
-      },
-    ];
-  },
+  // Removed redirect to allow landing page at "/"
+  // Authenticated users are redirected client-side in page.tsx
 };
 
 export default nextConfig;
