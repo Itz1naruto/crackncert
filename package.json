@@ -1,4 +1,6 @@
 {
+  "name": "ncertsmartest",
+  "version": "1.0.0",
   "scripts": {
     "dev": "npx next dev --webpack",
     "build": "npx next build",
