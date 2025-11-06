@@ -36,8 +36,8 @@ export default function RootLayout({
               (function() {
                 try {
                   var theme = localStorage.getItem('ncert-theme');
-                  var systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                  var initialTheme = theme || (systemPrefersDark ? 'dark' : 'light');
+                  // Default to light theme for new users
+                  var initialTheme = theme || 'light';
                   var html = document.documentElement;
                   
                   if (initialTheme === 'dark') {

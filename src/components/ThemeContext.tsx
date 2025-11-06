@@ -20,8 +20,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const initTheme = () => {
       try {
         const savedTheme = localStorage.getItem('ncert-theme') as Theme;
-        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const initialTheme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+        // Default to light theme for new users
+        const initialTheme = savedTheme || 'light';
         
         console.log('[Theme] Initializing theme:', initialTheme);
         setTheme(initialTheme);
