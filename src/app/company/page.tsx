@@ -15,7 +15,7 @@ export default function CompanyPage() {
               <ArrowLeftIcon className="w-5 h-5 text-gray-600" />
             </button>
             <BookOpenIcon className="w-8 h-8 text-gray-900" />
-            <h1 className="text-2xl font-bold text-gray-900">NCERT MCQ</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Crack NCERT</h1>
           </div>
         </div>
       </header>
@@ -35,7 +35,7 @@ export default function CompanyPage() {
           >
             <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-gray-900">Our Mission</h2>
             <p className="text-sm sm:text-base leading-relaxed mb-4 text-gray-600">
-              NCERT SmartTest is dedicated to making quality education accessible to every student in India. 
+              Crack NCERT is dedicated to making quality education accessible to every student in India. 
               We leverage cutting-edge AI technology to provide personalized, chapter-wise MCQ tests aligned 
               with the NCERT curriculum, helping students practice, learn, and excel in their studies.
             </p>
@@ -111,7 +111,7 @@ export default function CompanyPage() {
           >
             <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-gray-900">Join Our Community</h2>
             <p className="text-sm sm:text-base mb-4 text-gray-600">
-              Thousands of students across India are already using NCERT SmartTest to improve their test scores 
+              Thousands of students across India are already using Crack NCERT to improve their test scores 
               and deepen their understanding. Join us today and take your learning to the next level!
             </p>
             <Link href="/auth/signup" className="bg-gray-900 text-white inline-flex items-center gap-2 text-sm sm:text-base py-2.5 sm:py-3 px-6 sm:px-8 rounded-lg font-semibold hover:bg-gray-800 transition-colors mt-4">

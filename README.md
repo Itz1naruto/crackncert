@@ -1,6 +1,6 @@
-# NCERT Smartest
+# Crack NCERT
 
-NCERT Smartest is an online platform for chapter-wise MCQ practice/tests for Classes 1–12, where students can take auto-generated NCERT-based tests by subject and chapter, sign up to track their progress, or try as guests.
+Crack NCERT is an online platform for chapter-wise MCQ practice/tests for Classes 1–12, where students can take auto-generated NCERT-based tests by subject and chapter, sign up to track their progress, or try as guests.
 
 ## 🚀 Features
 - Chapter-wise MCQ tests for Classes 1–12 (Hindi, Urdu, Sanskrit, English, Science, SST)
@@ -53,4 +53,4 @@ Built with [Tailwind CSS](https://tailwindcss.com/) and [shadcn/ui](https://ui.s
 
 ---
 
-© 2025 NCERT Smartest
+© 2025 Crack NCERT

@@ -37,7 +37,7 @@ export default function FuturisticHero({ children }: { children?: React.ReactNod
         className="relative z-10 flex flex-col items-center mt-14 md:mt-28"
       >
         <div className="backdrop-blur-[6px] px-10 md:px-20 py-9 border-[2.5px] border-cyan-400/50 shadow-2xl rounded-3xl neon-glow glass-lg flex flex-col items-center w-full max-w-2xl">
-          <h1 className="text-3xl md:text-5xl font-extrabold text-cyan-200 drop-shadow-lg tracking-tighter mb-1 text-center" style={{textShadow:"0 0 15px #27f1fe, 0 1px 40px #23dced"}}>NCERT SmartTest</h1>
+          <h1 className="text-3xl md:text-5xl font-extrabold text-cyan-200 drop-shadow-lg tracking-tighter mb-1 text-center" style={{textShadow:"0 0 15px #27f1fe, 0 1px 40px #23dced"}}>Crack NCERT</h1>
           <p className="text-cyan-100/90 font-bold text-md md:text-lg text-center mb-2 animate-pulse" style={{textShadow:"0 0 7px #86ecfe, 0 0 18px #18e2f8"}}>Futuristic NCERT chapter MCQ practice, powered by AI</p>
           <div className="w-full mt-3">
             {children}

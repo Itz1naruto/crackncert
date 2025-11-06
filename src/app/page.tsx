@@ -121,7 +121,7 @@ export default function LandingPage() {
               >
                 <BookOpenIcon className="w-8 h-8 text-gray-900 dark:text-white" />
               </motion.div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">NCERT MCQ</h1>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Crack NCERT</h1>
             </motion.div>
             <motion.div
               initial={{ x: 20, opacity: 0 }}

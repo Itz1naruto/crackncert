@@ -157,7 +157,7 @@ function TestPageContent() {
               <ArrowLeftIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
             </button>
             <BookOpenIcon className="w-8 h-8 text-gray-900 dark:text-white" />
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">NCERT MCQ</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Crack NCERT</h1>
           </div>
         </div>
       </header>

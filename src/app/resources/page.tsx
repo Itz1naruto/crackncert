@@ -15,7 +15,7 @@ export default function ResourcesPage() {
               <ArrowLeftIcon className="w-5 h-5 text-gray-600" />
             </button>
             <BookOpenIcon className="w-8 h-8 text-gray-900" />
-            <h1 className="text-2xl font-bold text-gray-900">NCERT MCQ</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Crack NCERT</h1>
           </div>
         </div>
       </header>
@@ -24,7 +24,7 @@ export default function ResourcesPage() {
           <div className="text-center mb-8 sm:mb-12">
             <BookOpenIcon className="w-12 h-12 sm:w-16 sm:h-16 text-gray-700 mx-auto mb-4" />
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-3">Product Resources</h1>
-            <p className="text-base sm:text-lg text-gray-600">Everything you need to get started with NCERT SmartTest</p>
+            <p className="text-base sm:text-lg text-gray-600">Everything you need to get started with Crack NCERT</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-8">
@@ -70,7 +70,7 @@ export default function ResourcesPage() {
             >
               <QuestionMarkCircleIcon className="w-8 h-8 sm:w-10 sm:h-10 text-gray-700 mb-4" />
               <h2 className="text-xl sm:text-2xl font-bold mb-3 text-gray-900">FAQs</h2>
-              <p className="text-sm sm:text-base text-gray-600 mb-4">Find answers to commonly asked questions about NCERT SmartTest.</p>
+              <p className="text-sm sm:text-base text-gray-600 mb-4">Find answers to commonly asked questions about Crack NCERT.</p>
               <ul className="space-y-2 text-sm sm:text-base text-gray-700">
                 <li>• How are questions generated?</li>
                 <li>• Can I retake tests?</li>

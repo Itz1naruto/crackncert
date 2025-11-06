@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "NCERT Smartest",
+  title: "Crack NCERT",
   description: "Practice NCERT-based MCQs for Classes 1–12 by chapter. Instant test generation and score tracking.",
 };
 

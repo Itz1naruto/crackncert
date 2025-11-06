@@ -102,7 +102,7 @@ export default function SelectClassPage() {
                 <ArrowLeftIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
               </AnimatedButton>
               <BookOpenIcon className="w-8 h-8 text-gray-900 dark:text-white" />
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">NCERT MCQ</h1>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Crack NCERT</h1>
             </motion.div>
             <motion.div 
               initial={{ opacity: 0, x: 20 }}
